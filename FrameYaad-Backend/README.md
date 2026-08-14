@@ -163,7 +163,7 @@ All endpoints use the default prefix `/api/v1`.
 
 ### Authentication and self-service
 
-Login deliberately does not return raw tokens in JSON. It sets `frameyaad_access_token` and `frameyaad_refresh_token` as HttpOnly cookies and returns `authentication: "httpOnlyCookie"`. Browsers and Postman resend those cookies automatically. The authentication middleware verifies the access JWT with Supabase, then loads the user's current role and active status from PostgreSQL before RBAC runs.
+Login sets `frameyaad_access_token` and `frameyaad_refresh_token` as HttpOnly cookies and also returns the short-lived access token for cross-site clients to send as an `Authorization: Bearer <token>` header. Refresh tokens remain HttpOnly-only and are never returned in JSON. The authentication middleware verifies the access JWT with Supabase, then loads the user's current role and active status from PostgreSQL before RBAC runs.
 
 | Method | Endpoint | Access | Description |
 | --- | --- | --- | --- |

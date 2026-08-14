@@ -57,6 +57,7 @@ const loginFor = (roles: UserRole | readonly UserRole[]): RequestHandler => asyn
     success: true,
     data: {
       user: result.user,
+      accessToken: result.session.access_token,
       authentication: "httpOnlyCookie",
       expiresInSeconds: result.session.expires_in,
     },
@@ -78,6 +79,7 @@ export const refresh: RequestHandler = async (request, response) => {
     success: true,
     data: {
       user: result.user,
+      accessToken: result.session.access_token,
       authentication: "httpOnlyCookie",
       expiresInSeconds: result.session.expires_in,
     },

@@ -203,7 +203,7 @@ describe("authentication validation and RBAC", () => {
     expect((response.body as ErrorResponseBody).error.code).toBe("AUTHENTICATION_REQUIRED");
   });
 
-  it("keeps login tokens in HttpOnly cookies instead of the JSON body", async () => {
+  it("returns the access token while keeping the refresh token in an HttpOnly cookie", async () => {
     mocks.signInWithPassword.mockResolvedValue({
       data: {
         session: {
@@ -227,7 +227,7 @@ describe("authentication validation and RBAC", () => {
       data: { authentication: string; accessToken?: string; user: { role: UserRole } };
     };
     expect(body.data).toMatchObject({ authentication: "httpOnlyCookie" });
-    expect(body.data.accessToken).toBeUndefined();
+    expect(body.data.accessToken).toBe("customer-access-token");
     const setCookieHeader = response.get("set-cookie") as unknown;
     const serializedCookies = Array.isArray(setCookieHeader)
       ? setCookieHeader.map(String).join("; ")
