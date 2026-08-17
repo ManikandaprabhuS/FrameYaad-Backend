@@ -6,6 +6,7 @@ import { validateBody } from "../../middleware/validate.middleware";
 import * as controller from "./auth.controller";
 import {
   changePasswordSchema,
+  customerRegistrationSchema,
   forgotPasswordSchema,
   loginSchema,
   registrationSchema,
@@ -15,7 +16,7 @@ import {
 
 export const authRouter = Router();
 
-authRouter.post("/customer/register", validateBody(registrationSchema), controller.registerCustomer);
+authRouter.post("/customer/register", validateBody(customerRegistrationSchema), controller.registerCustomer);
 authRouter.post("/admin/register", optionalAuthenticate, validateBody(registrationSchema), controller.registerAdmin);
 authRouter.post("/customer/login", validateBody(loginSchema), controller.loginCustomer);
 authRouter.post("/admin/login", staffLoginRateLimit, validateBody(loginSchema), controller.loginAdmin);

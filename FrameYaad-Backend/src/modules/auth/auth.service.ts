@@ -11,6 +11,7 @@ import { createCustomerRegistrationNotifications } from "../notifications/notifi
 import type { z } from "zod";
 import type {
   changePasswordSchema,
+  customerRegistrationSchema,
   loginSchema,
   profileFieldsSchema,
   registrationSchema,
@@ -18,6 +19,7 @@ import type {
 } from "./auth.schemas";
 
 type RegistrationInput = z.infer<typeof registrationSchema>;
+type CustomerRegistrationInput = z.infer<typeof customerRegistrationSchema>;
 type LoginInput = z.infer<typeof loginSchema>;
 type ProfileInput = z.infer<typeof profileFieldsSchema>;
 type ChangePasswordInput = z.infer<typeof changePasswordSchema>;
@@ -64,12 +66,12 @@ const createManagedUser = async (
   }
 };
 
-export const registerCustomer = async (input: RegistrationInput): Promise<AuthenticationResult> => {
+export const registerCustomer = async (input: CustomerRegistrationInput): Promise<AuthenticationResult> => {
   const client = createUserSupabaseClient();
   const { data, error } = await client.auth.signUp({
     email: input.email,
     password: input.password,
-    options: { data: { name: input.name } },
+    options: { data: { name: input.name, gender: input.gender } },
   });
 
   if (error || !data.user || data.user.identities?.length === 0) {
@@ -85,6 +87,7 @@ export const registerCustomer = async (input: RegistrationInput): Promise<Authen
           name: input.name,
           email: input.email,
           phoneNumber: input.phoneNumber,
+          gender: input.gender,
           role: UserRole.CUSTOMER,
           isEmailVerified: Boolean(authUser.email_confirmed_at),
         },

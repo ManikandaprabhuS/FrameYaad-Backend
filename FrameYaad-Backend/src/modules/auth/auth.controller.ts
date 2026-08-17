@@ -11,6 +11,7 @@ import {
 import type { z } from "zod";
 import type {
   changePasswordSchema,
+  customerRegistrationSchema,
   forgotPasswordSchema,
   loginSchema,
   registrationSchema,
@@ -20,6 +21,7 @@ import type {
 import * as authService from "./auth.service";
 
 type RegistrationBody = z.infer<typeof registrationSchema>;
+type CustomerRegistrationBody = z.infer<typeof customerRegistrationSchema>;
 type LoginBody = z.infer<typeof loginSchema>;
 type ForgotPasswordBody = z.infer<typeof forgotPasswordSchema>;
 type ResetPasswordBody = z.infer<typeof resetPasswordSchema>;
@@ -32,7 +34,7 @@ const requireAuth = (request: Parameters<RequestHandler>[0]) => {
 };
 
 export const registerCustomer: RequestHandler = async (request, response) => {
-  const result = await authService.registerCustomer(request.body as RegistrationBody);
+  const result = await authService.registerCustomer(request.body as CustomerRegistrationBody);
   if (result.session) setAuthCookies(response, result.session);
   response.status(201).json({
     success: true,

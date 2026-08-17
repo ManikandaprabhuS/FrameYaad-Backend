@@ -25,6 +25,10 @@ export const registrationSchema = z.object({
   phoneNumber: z.string().trim().min(7).max(20).optional(),
 }).strict();
 
+export const customerRegistrationSchema = registrationSchema.extend({
+  gender: z.enum(["MALE", "FEMALE"]),
+}).strict();
+
 export const loginSchema = z.object({
   email: emailSchema,
   password: z.string().min(1).max(72),
