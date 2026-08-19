@@ -364,6 +364,7 @@ src/
     orders/
     wishlist/
     notifications/
+    newsletter/
   prisma/
   routes/
   types/
@@ -376,3 +377,33 @@ tests/                # API, validation, and RBAC tests
 ## Next Planned Module
 
 Material management, followed by variants and product images. Coupons and payments remain excluded from the implemented checkout flow.
+
+## Newsletter Module
+
+Newsletter subscriptions are stored independently from users, so visitors can subscribe without creating or signing in to an account. Emails are trimmed, normalized to lowercase, and uniquely stored. Inactive records are reactivated when the same visitor subscribes again; records are retained when unsubscribed.
+
+### Schema
+
+- `NewsletterSubscriber` maps to `newsletter_subscribers`.
+- Fields: UUID `id`, unique `email`, `isActive`, `subscribedAt`, nullable `unsubscribedAt`, `createdAt`, and `updatedAt`.
+- An index on status and subscription date supports staff list queries.
+- Migration: `prisma/migrations/20260819090000_newsletter_subscribers/migration.sql`.
+
+Apply migrations during deployment with:
+
+```bash
+npm exec prisma migrate deploy
+```
+
+### APIs
+
+| Method | Endpoint | Access | Purpose |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/newsletter/subscribe` | Public | Subscribe or reactivate a normalized email |
+| `POST` | `/api/v1/newsletter/unsubscribe` | Public | Mark an email unsubscribed without deleting it |
+| `GET` | `/api/v1/newsletter/subscribers` | Admin, Employee | Paginated list with `search` and `status` filters |
+| `GET` | `/api/v1/newsletter/subscribers/export` | Admin, Employee | Download the filtered subscriber list as CSV |
+
+Validation rejects empty or malformed emails, invalid pagination, and unsupported statuses. Duplicate active subscriptions return HTTP `409` with code `ALREADY_SUBSCRIBED`. Subscriber management reuses the existing authentication and staff-role middleware; customers receive HTTP `403`. Centralized error handling prevents Prisma and database details from reaching API consumers.
+
+Focused API coverage is provided by `tests/newsletter-rbac.test.ts`, including normalization, duplicate handling, reactivation, unsubscribe behavior, request validation, Admin/Employee authorization, customer denial, pagination/filter forwarding, CSV headers, and safe unexpected-error responses.

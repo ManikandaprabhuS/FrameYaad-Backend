@@ -13,6 +13,7 @@ import { notificationsRouter } from "../modules/notifications/notifications.rout
 import { logMethodCall } from "../middleware/method-call-logger.middleware";
 import { couponRouter } from "../modules/coupon/coupon.routes";
 import { productDiscountRouter } from "../modules/product-discount/product-discount.routes";
+import { newsletterRouter } from "../modules/newsletter/newsletter.routes";
 
 export const apiRouter = Router();
 
@@ -29,3 +30,4 @@ apiRouter.use("/wishlist", wishlistRouter);
 apiRouter.use("/notifications", notificationsRouter);
 apiRouter.use("/coupons", couponRouter);
 apiRouter.use("/product-discounts", productDiscountRouter);
+apiRouter.use("/newsletter", newsletterRouter);

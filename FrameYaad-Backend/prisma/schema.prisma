@@ -346,3 +346,17 @@ model Notification {
   @@index([readById])
   @@map("notifications")
 }
+
+model NewsletterSubscriber {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email          String    @unique @db.VarChar(320)
+  isActive       Boolean   @default(true) @map("is_active")
+  subscribedAt   DateTime  @default(now()) @map("subscribed_at") @db.Timestamptz(6)
+  unsubscribedAt DateTime? @map("unsubscribed_at") @db.Timestamptz(6)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  @@index([isActive, subscribedAt])
+  @@map("newsletter_subscribers")
+}
+
