@@ -2,9 +2,10 @@ import { Router } from "express";
 import { authenticate, adminOnly } from "../../middleware/auth.middleware";
 import { validateBody } from "../../middleware/validate.middleware";
 import * as controller from "./coupon.controller";
-import { createCouponSchema, updateCouponSchema } from "./coupon.schemas";
+import { createCouponSchema, updateCouponSchema, validateCouponSchema } from "./coupon.schemas";
 
 export const couponRouter = Router();
+couponRouter.post("/validate", validateBody(validateCouponSchema), controller.validate);
 couponRouter.use(authenticate, adminOnly);
 couponRouter.get("/", controller.list);
 couponRouter.get("/:id", controller.get);

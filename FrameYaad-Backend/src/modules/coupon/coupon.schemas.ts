@@ -52,5 +52,15 @@ export const couponListQuerySchema = z.object({
 });
 export const couponStatusSchema = z.object({ isActive: z.boolean() });
 
+export const validateCouponSchema = z.object({
+  code: z.string().trim().min(1, "Promo code is required").max(40),
+  items: z.array(z.object({
+    productVariantId: z.string().uuid(),
+    unitPrice: z.number().nonnegative(),
+    quantity: z.number().int().positive(),
+  })).min(1, "Cart must contain at least one item"),
+});
+
 export type CreateCouponInput = z.infer<typeof createCouponSchema>;
 export type UpdateCouponInput = z.infer<typeof updateCouponSchema>;
+export type ValidateCouponInput = z.infer<typeof validateCouponSchema>;
