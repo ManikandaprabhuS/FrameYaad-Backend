@@ -133,6 +133,10 @@ All application tables have RLS enabled. There are no browser policies because E
 
 ## Recent Backend Updates
 
+- Order list responses now include database-derived status totals (`pending`, `processing`, `shipped`, `delivered`, and `cancelled`) so dashboards do not calculate global KPIs from one paginated page.
+- Customer list responses now include order summaries scoped to the returned customer page, eliminating the frontend's separate 100-order bootstrap request.
+- These performance additions are backward-compatible and do not change the Prisma schema or existing endpoint paths.
+
 ### Coupon Management (backend complete)
 
 - Added standalone `Coupon` model with coupon and discount enums, indexes, date/usage/percentage constraints, and admin creator relation.

@@ -108,7 +108,7 @@ export const listOrders = async (rawQuery: unknown, actorId: string, role: UserR
         : { orderNumber: { contains: search, mode: "insensitive" } }
       : {}),
   };
-  const [orders, total] = await prisma.$transaction([
+  const [orders, total, pendingCount, processingCount, shippedCount, deliveredCount, cancelledCount] = await prisma.$transaction([
     prisma.order.findMany({
       where,
       select: orderViewSelect,
@@ -117,8 +117,24 @@ export const listOrders = async (rawQuery: unknown, actorId: string, role: UserR
       take: limit,
     }),
     prisma.order.count({ where }),
+    prisma.order.count({ where: { ...where, status: OrderStatus.PLACED } }),
+    prisma.order.count({ where: { ...where, status: { in: [OrderStatus.CONFIRMED, OrderStatus.PROCESSING, OrderStatus.READY_TO_SHIP] } } }),
+    prisma.order.count({ where: { ...where, status: OrderStatus.SHIPPED } }),
+    prisma.order.count({ where: { ...where, status: OrderStatus.DELIVERED } }),
+    prisma.order.count({ where: { ...where, status: OrderStatus.CANCELLED } }),
   ]);
-  return { orders, pagination: paginationMeta(page, limit, total) };
+  return {
+    orders,
+    pagination: paginationMeta(page, limit, total),
+    summary: {
+      totalCount: total,
+      pendingCount,
+      processingCount,
+      shippedCount,
+      deliveredCount,
+      cancelledCount,
+    },
+  };
 };
 
 export const getOrder = async (id: string, actorId: string, role: UserRole) => {

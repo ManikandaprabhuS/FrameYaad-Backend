@@ -39,7 +39,23 @@ export const listCustomers = async (rawQuery: unknown) => {
     }),
     prisma.user.count({ where }),
   ]);
-  return { users, pagination: paginationMeta(page, limit, total) };
+  const userIds = users.map((user) => user.id);
+  const orderSummaries = userIds.length === 0 ? [] : await prisma.order.findMany({
+    where: { userId: { in: userIds } },
+    select: { id: true, userId: true, orderNumber: true, status: true, totalPrice: true, createdAt: true },
+    orderBy: { createdAt: "desc" },
+  });
+  const summariesByUser = new Map<string, typeof orderSummaries>();
+  for (const order of orderSummaries) {
+    const existing = summariesByUser.get(order.userId) ?? [];
+    existing.push(order);
+    summariesByUser.set(order.userId, existing);
+  }
+
+  return {
+    users: users.map((user) => ({ ...user, orderSummaries: summariesByUser.get(user.id) ?? [] })),
+    pagination: paginationMeta(page, limit, total),
+  };
 };
 
 export const getCustomer = async (id: string) => {
