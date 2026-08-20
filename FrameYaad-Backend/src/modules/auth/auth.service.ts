@@ -131,6 +131,10 @@ export const login = async (
       { supabaseStatus: error.status, supabaseCode: error.code, supabaseError: error.message },
       "Supabase login request failed",
     );
+    const normalizedMessage = error.message.toLowerCase();
+    if (error.code === "email_not_confirmed" || normalizedMessage.includes("email not confirmed")) {
+      throw new ApiError(403, "Please verify your email to continue", "EMAIL_NOT_VERIFIED");
+    }
     if (error.code !== "invalid_credentials") {
       throw new ApiError(502, "Authentication service is temporarily unavailable", "AUTH_PROVIDER_UNAVAILABLE");
     }

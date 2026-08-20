@@ -235,6 +235,27 @@ describe("authentication validation and RBAC", () => {
     expect(serializedCookies).toContain("HttpOnly");
   });
 
+  it("returns an actionable error when a customer's email is not verified", async () => {
+    mocks.signInWithPassword.mockResolvedValue({
+      data: { session: null, user: null },
+      error: Object.assign(new Error("Email not confirmed"), {
+        code: "email_not_confirmed",
+        status: 400,
+      }),
+    });
+
+    const response = await request(app).post("/api/v1/auth/customer/login").send({
+      email: customer.email,
+      password: "CustomerPassword1",
+    });
+
+    expect(response.status).toBe(403);
+    expect((response.body as ErrorResponseBody).error).toMatchObject({
+      code: "EMAIL_NOT_VERIFIED",
+      message: "Please verify your email to continue",
+    });
+  });
+
   it("allows an employee to use the shared staff dashboard login", async () => {
     mocks.signInWithPassword.mockResolvedValue({
       data: {
