@@ -15,6 +15,9 @@ const environmentSchema = z.object({
   SUPABASE_URL: z.url(),
   SUPABASE_ANON_KEY: z.string().min(1),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1),
+  RESEND_API_KEY: z.string().min(1).optional(),
+  EMAIL_FROM: z.string().min(1).optional(),
+  ADMIN_EMAIL: z.email().optional(),
 });
 
 const parsedEnvironment = environmentSchema.safeParse(process.env);

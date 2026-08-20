@@ -369,6 +369,9 @@ src/
     wishlist/
     notifications/
     newsletter/
+    appointment/
+  services/
+    appointment-email/
   prisma/
   routes/
   types/
@@ -411,3 +414,35 @@ npm exec prisma migrate deploy
 Validation rejects empty or malformed emails, invalid pagination, and unsupported statuses. Duplicate active subscriptions return HTTP `409` with code `ALREADY_SUBSCRIBED`. Subscriber management reuses the existing authentication and staff-role middleware; customers receive HTTP `403`. Centralized error handling prevents Prisma and database details from reaching API consumers.
 
 Focused API coverage is provided by `tests/newsletter-rbac.test.ts`, including normalization, duplicate handling, reactivation, unsubscribe behavior, request validation, Admin/Employee authorization, customer denial, pagination/filter forwarding, CSV headers, and safe unexpected-error responses.
+
+## Appointment Booking Module
+
+Appointment booking is isolated from users, orders, notifications, and other business modules. Visitors can submit a framing-service request without authentication; only authenticated `ADMIN` and `EMPLOYEE` users can view or manage appointments.
+
+### Schema and migration
+
+- New enums: `AppointmentLocation`, `AppointmentStatus`, and `AppointmentEmailStatus`.
+- New `Appointment` model mapped to `appointments`, including immutable `originalBookingDate`, current `bookingDate`, location, frame requirements, lifecycle reasons, aggregate email delivery status, and timestamps.
+- Indexed by status/date, location/date, creation date, and email.
+- Migration: `prisma/migrations/20260820130000_appointments/migration.sql`.
+
+### APIs
+
+| Method | Endpoint | Access | Purpose |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/appointments` | Public | Validate and create a pending appointment; send customer and admin emails |
+| `GET` | `/api/v1/appointments` | Admin, Employee | Paginated newest-first list with search, status, location, and date filters |
+| `GET` | `/api/v1/appointments/:id` | Admin, Employee | Read appointment details |
+| `PATCH` | `/api/v1/appointments/:id/status` | Admin, Employee | Confirm, reschedule, cancel, or complete through enforced transitions |
+
+The backend enforces Indian phone, email, future-date, location, frame-type, conditional `OTHERS`, reschedule-date, and lifecycle validation. `CANCELLED` and `COMPLETED` are terminal. Rescheduling never overwrites `originalBookingDate`. Reasons are trimmed and stripped of HTML tags. Email delivery uses the Resend HTTPS API and never blocks a successful database update; failures are logged and recorded as `FAILED` without leaking provider details.
+
+Required deployment variables:
+
+```env
+RESEND_API_KEY=re_your_resend_key
+EMAIL_FROM=FrameYaad <appointments@your-verified-domain.com>
+ADMIN_EMAIL=appointments@frameyaad.com
+```
+
+Customer templates cover request received, confirmed, rescheduled, and cancelled. The admin receives a new-request email requiring action. Completion is intentionally admin-only with no email. Focused coverage lives in `tests/appointment-rbac.test.ts` and `tests/appointment.service.test.ts`.

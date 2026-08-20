@@ -14,6 +14,7 @@ import { logMethodCall } from "../middleware/method-call-logger.middleware";
 import { couponRouter } from "../modules/coupon/coupon.routes";
 import { productDiscountRouter } from "../modules/product-discount/product-discount.routes";
 import { newsletterRouter } from "../modules/newsletter/newsletter.routes";
+import { appointmentRouter } from "../modules/appointment/appointment.routes";
 
 export const apiRouter = Router();
 
@@ -31,3 +32,4 @@ apiRouter.use("/notifications", notificationsRouter);
 apiRouter.use("/coupons", couponRouter);
 apiRouter.use("/product-discounts", productDiscountRouter);
 apiRouter.use("/newsletter", newsletterRouter);
+apiRouter.use("/appointments", appointmentRouter);
