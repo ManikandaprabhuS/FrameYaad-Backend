@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   addItem: vi.fn(),
   updateItem: vi.fn(),
   removeItem: vi.fn(),
+  moveItemToWishlist: vi.fn(),
   clearCart: vi.fn(),
   checkout: vi.fn(),
   listOrders: vi.fn(),
@@ -33,6 +34,7 @@ vi.mock("../src/modules/cart/cart.service", () => ({
   addItem: mocks.addItem,
   updateItem: mocks.updateItem,
   removeItem: mocks.removeItem,
+  moveItemToWishlist: mocks.moveItemToWishlist,
   clearCart: mocks.clearCart,
 }));
 
@@ -107,6 +109,10 @@ beforeEach(() => {
   mocks.addItem.mockResolvedValue(cart);
   mocks.updateItem.mockResolvedValue(cart);
   mocks.removeItem.mockResolvedValue({ ...cart, items: [] });
+  mocks.moveItemToWishlist.mockResolvedValue({
+    wishlistItem: { id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd", productIdentifier: "FRAME-001" },
+    cart: { ...cart, items: [] },
+  });
   mocks.clearCart.mockResolvedValue(undefined);
   mocks.checkout.mockResolvedValue(order);
   mocks.listOrders.mockResolvedValue({ orders: [order], pagination: { page: 1, limit: 20, total: 1, totalPages: 1 } });
@@ -144,6 +150,18 @@ describe("cart ownership and order RBAC", () => {
       .send({ quantity: 3 });
     expect(response.status).toBe(200);
     expect(mocks.updateItem).toHaveBeenCalledWith(customerId, cartItemId, { quantity: 3 });
+  });
+
+  it("moves a cart product to the authenticated customer's wishlist", async () => {
+    const response = await request(app)
+      .post("/api/v1/cart/move-to-wishlist")
+      .set("Authorization", "Bearer customer-token")
+      .send({ productIdentifier: "FRAME-001" });
+
+    expect(response.status).toBe(200);
+    expect(mocks.moveItemToWishlist).toHaveBeenCalledWith(customerId, {
+      productIdentifier: "FRAME-001",
+    });
   });
 
   it("allows a customer to checkout using an address", async () => {

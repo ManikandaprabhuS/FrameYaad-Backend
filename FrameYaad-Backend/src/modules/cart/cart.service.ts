@@ -4,10 +4,20 @@ import type { z } from "zod";
 import { prisma } from "../../prisma/client";
 import { ApiError } from "../../utils/api-error";
 import { cartViewSelect } from "./cart.select";
-import type { addCartItemSchema, updateCartItemSchema } from "./cart.schemas";
+import { productViewSelect } from "../products/products.select";
+import type { addCartItemSchema, moveCartItemToWishlistSchema, updateCartItemSchema } from "./cart.schemas";
 
 type AddCartItemInput = z.infer<typeof addCartItemSchema>;
 type UpdateCartItemInput = z.infer<typeof updateCartItemSchema>;
+type MoveCartItemToWishlistInput = z.infer<typeof moveCartItemToWishlistSchema>;
+
+const wishlistSelect = {
+  id: true,
+  userId: true,
+  productIdentifier: true,
+  createdAt: true,
+  product: { select: productViewSelect },
+} as const;
 
 const getOrCreateCart = (transaction: Prisma.TransactionClient, userId: string) =>
   transaction.cart.upsert({
@@ -117,6 +127,39 @@ export const removeItem = (userId: string, itemId: string) =>
     await transaction.cartItem.delete({ where: { id: item.id } });
     await refreshCartTotal(transaction, item.cartId);
     return returnCart(transaction, item.cartId);
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+
+export const moveItemToWishlist = (userId: string, input: MoveCartItemToWishlistInput) =>
+  prisma.$transaction(async (transaction) => {
+    const product = await getAvailableProduct(transaction, input.productIdentifier);
+    const cart = await transaction.cart.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+
+    const wishlistItem = await transaction.wishlist.upsert({
+      where: {
+        userId_productIdentifier: {
+          userId,
+          productIdentifier: product.productIdentifier,
+        },
+      },
+      create: { userId, productIdentifier: product.productIdentifier },
+      update: {},
+      select: wishlistSelect,
+    });
+
+    if (cart) {
+      await transaction.cartItem.deleteMany({
+        where: { cartId: cart.id, productIdentifier: product.productIdentifier },
+      });
+      await refreshCartTotal(transaction, cart.id);
+    }
+
+    return {
+      wishlistItem,
+      cart: cart ? await returnCart(transaction, cart.id) : null,
+    };
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 
 export const clearCart = async (userId: string): Promise<void> => {
